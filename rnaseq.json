@@ -1,0 +1,562 @@
+[
+    {
+        "module_path": "hisat2/align/main.nf",
+        "process_name": "HISAT2_ALIGN",
+        "input": "tuple val(meta), path(reads)\n    tuple val(meta2), path(index)\n    tuple val(meta3), path(splicesites)",
+        "output": "tuple val(meta), path(\"*.bam\")                   , emit: bam\n    tuple val(meta), path(\"*.log\")                   , emit: summary\n    tuple val(meta), path(\"*fastq.gz\"), optional:true, emit: fastq\n    path  \"versions.yml\"                             , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "fastqc/main.nf",
+        "process_name": "FASTQC",
+        "input": "tuple val(meta), path(reads)",
+        "output": "tuple val(meta), path(\"*.html\"), emit: html\n    tuple val(meta), path(\"*.zip\") , emit: zip\n    path  \"versions.yml\"           , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "salmon/index/main.nf",
+        "process_name": "SALMON_INDEX",
+        "input": "path genome_fasta\n    path transcript_fasta",
+        "output": "path \"salmon\"      , emit: index\n    path \"versions.yml\", emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "star/align/main.nf",
+        "process_name": "STAR_ALIGN",
+        "input": "tuple val(meta), path(reads, stageAs: \"input*/*\")\n    tuple val(meta2), path(index)\n    tuple val(meta3), path(gtf)\n    val star_ignore_sjdbgtf\n    val seq_platform\n    val seq_center",
+        "output": "tuple val(meta), path('*Log.final.out')   , emit: log_final\n    tuple val(meta), path('*Log.out')         , emit: log_out\n    tuple val(meta), path('*Log.progress.out'), emit: log_progress\n    path  \"versions.yml\"                      , emit: versions\n\n    tuple val(meta), path('*d.out.bam')                              , optional:true, emit: bam\n    tuple val(meta), path(\"${prefix}.sortedByCoord.out.bam\")         , optional:true, emit: bam_sorted\n    tuple val(meta), path(\"${prefix}.Aligned.sortedByCoord.out.bam\") , optional:true, emit: bam_sorted_aligned\n    tuple val(meta), path('*toTranscriptome.out.bam')                , optional:true, emit: bam_transcript\n    tuple val(meta), path('*Aligned.unsort.out.bam')                 , optional:true, emit: bam_unsorted\n    tuple val(meta), path('*fastq.gz')                               , optional:true, emit: fastq\n    tuple val(meta), path('*.tab')                                   , optional:true, emit: tab\n    tuple val(meta), path('*.SJ.out.tab')                            , optional:true, emit: spl_junc_tab\n    tuple val(meta), path('*.ReadsPerGene.out.tab')                  , optional:true, emit: read_per_gene_tab\n    tuple val(meta), path('*.out.junction')                          , optional:true, emit: junction\n    tuple val(meta), path('*.out.sam')                               , optional:true, emit: sam\n    tuple val(meta), path('*.wig')                                   , optional:true, emit: wig\n    tuple val(meta), path('*.bg')                                    , optional:true, emit: bedgraph\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "bbmap/bbsplit/main.nf",
+        "process_name": "BBMAP_BBSPLIT",
+        "input": "tuple val(meta), path(reads)\n    path  index\n    path  primary_ref\n    tuple val(other_ref_names), path(other_ref_paths)\n    val   only_build_index",
+        "output": "path \"bbsplit\"                            , optional:true, emit: index\n    tuple val(meta), path('*primary*fastq.gz'), optional:true, emit: primary_fastq\n    tuple val(meta), path('*fastq.gz')        , optional:true, emit: all_fastq\n    tuple val(meta), path('*txt')             , optional:true, emit: stats\n    tuple val(meta), path('*.log')            , optional:true, emit: log\n    path \"versions.yml\"                       , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "bedtools/genomecov/main.nf",
+        "process_name": "BEDTOOLS_GENOMECOV",
+        "input": "tuple val(meta), path(intervals), val(scale)\n    path  sizes\n    val   extension\n    val   sort",
+        "output": "tuple val(meta), path(\"*.${extension}\"), emit: genomecov\n    path  \"versions.yml\"                   , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args      = task.ext.args  ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "bracken/bracken/main.nf",
+        "process_name": "BRACKEN_BRACKEN",
+        "input": "tuple val(meta), path(kraken_report)\n    path database",
+        "output": "tuple val(meta), path(bracken_report)        , emit: reports\n    tuple val(meta), path(bracken_kraken_style_report), emit: txt\n    path \"versions.yml\"          , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: \"\"",
+        "container": "",
+        "label": "process_low",
+        "publishDir": ""
+    },
+    {
+        "module_path": "cat/fastq/main.nf",
+        "process_name": "CAT_FASTQ",
+        "input": "tuple val(meta), path(reads, stageAs: \"input*/*\")",
+        "output": "tuple val(meta), path(\"*.merged.fastq.gz\"), emit: reads\n    path \"versions.yml\"                       , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "custom/catadditionalfasta/main.nf",
+        "process_name": "CUSTOM_CATADDITIONALFASTA",
+        "input": "tuple val(meta), path(fasta), path(gtf)\n    tuple val(meta2), path(add_fasta)\n    val  biotype",
+        "output": "tuple val(meta), path(\"*/*.fasta\") , emit: fasta\n    tuple val(meta), path(\"*/*.gtf\")   , emit: gtf\n    path \"versions.yml\"                , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "template 'fasta2gtf.py'",
+        "container": "",
+        "label": "",
+        "publishDir": ""
+    },
+    {
+        "module_path": "custom/getchromsizes/main.nf",
+        "process_name": "CUSTOM_GETCHROMSIZES",
+        "input": "tuple val(meta), path(fasta)",
+        "output": "tuple val(meta), path (\"*.sizes\"), emit: sizes\n    tuple val(meta), path (\"*.fai\")  , emit: fai\n    tuple val(meta), path (\"*.gzi\")  , emit: gzi, optional: true\n    path  \"versions.yml\"             , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "custom/tx2gene/main.nf",
+        "process_name": "CUSTOM_TX2GENE",
+        "input": "tuple val(meta), path(gtf)\n    tuple val(meta2), path (\"quants/*\")\n    val quant_type\n    val id\n    val extra",
+        "output": "tuple val(meta), path(\"*tx2gene.tsv\"), emit: tx2gene\n    path \"versions.yml\"                  , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "template 'tx2gene.py'",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "dupradar/main.nf",
+        "process_name": "DUPRADAR",
+        "input": "tuple val(meta), path(bam)\n    tuple val(meta2), path(gtf)",
+        "output": "tuple val(meta), path(\"*_duprateExpDens.pdf\")   , emit: scatter2d\n    tuple val(meta), path(\"*_duprateExpBoxplot.pdf\"), emit: boxplot\n    tuple val(meta), path(\"*_expressionHist.pdf\")   , emit: hist\n    tuple val(meta), path(\"*_dupMatrix.txt\")        , emit: dupmatrix\n    tuple val(meta), path(\"*_intercept_slope.txt\")  , emit: intercept_slope\n    tuple val(meta), path(\"*_mqc.txt\")              , emit: multiqc\n    tuple val(meta), path(\"*.R_sessionInfo.log\")    , emit: session_info\n    path \"versions.yml\"                             , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "template 'dupradar.r'",
+        "container": "",
+        "label": "process_long",
+        "publishDir": ""
+    },
+    {
+        "module_path": "fastp/main.nf",
+        "process_name": "FASTP",
+        "input": "tuple val(meta), path(reads)\n    path  adapter_fasta\n    val   discard_trimmed_pass\n    val   save_trimmed_fail\n    val   save_merged",
+        "output": "tuple val(meta), path('*.fastp.fastq.gz') , optional:true, emit: reads\n    tuple val(meta), path('*.json')           , emit: json\n    tuple val(meta), path('*.html')           , emit: html\n    tuple val(meta), path('*.log')            , emit: log\n    tuple val(meta), path('*.fail.fastq.gz')  , optional:true, emit: reads_fail\n    tuple val(meta), path('*.merged.fastq.gz'), optional:true, emit: reads_merged\n    path \"versions.yml\"                       , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "fq/lint/main.nf",
+        "process_name": "FQ_LINT",
+        "input": "tuple val(meta), path(fastq)",
+        "output": "tuple val(meta), path(\"*.fq_lint.txt\"), emit: lint\n    path \"versions.yml\"                   , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args   = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_low",
+        "publishDir": ""
+    },
+    {
+        "module_path": "fq/subsample/main.nf",
+        "process_name": "FQ_SUBSAMPLE",
+        "input": "tuple val(meta), path(fastq)",
+        "output": "tuple val(meta), path(\"*.fastq.gz\"), emit: fastq\n    path \"versions.yml\"                , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "/* args requires:",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "gffread/main.nf",
+        "process_name": "GFFREAD",
+        "input": "tuple val(meta), path(gff)\n    path fasta",
+        "output": "tuple val(meta), path(\"*.gtf\")  , emit: gtf             , optional: true\n    tuple val(meta), path(\"*.gff3\") , emit: gffread_gff     , optional: true\n    tuple val(meta), path(\"*.fasta\"), emit: gffread_fasta   , optional: true\n    path \"versions.yml\"             , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args        = task.ext.args             ?: ''",
+        "container": "",
+        "label": "process_low",
+        "publishDir": ""
+    },
+    {
+        "module_path": "gunzip/main.nf",
+        "process_name": "GUNZIP",
+        "input": "tuple val(meta), path(archive)",
+        "output": "tuple val(meta), path(\"$gunzip\"), emit: gunzip\n    path \"versions.yml\"             , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args        = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "hisat2/align/main.nf",
+        "process_name": "HISAT2_ALIGN",
+        "input": "tuple val(meta), path(reads)\n    tuple val(meta2), path(index)\n    tuple val(meta3), path(splicesites)",
+        "output": "tuple val(meta), path(\"*.bam\")                   , emit: bam\n    tuple val(meta), path(\"*.log\")                   , emit: summary\n    tuple val(meta), path(\"*fastq.gz\"), optional:true, emit: fastq\n    path  \"versions.yml\"                             , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "hisat2/build/main.nf",
+        "process_name": "HISAT2_BUILD",
+        "input": "tuple val(meta), path(fasta)\n    tuple val(meta2), path(gtf)\n    tuple val(meta3), path(splicesites)",
+        "output": "tuple val(meta), path(\"hisat2\") , emit: index\n    path \"versions.yml\"             , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "hisat2/extractsplicesites/main.nf",
+        "process_name": "HISAT2_EXTRACTSPLICESITES",
+        "input": "tuple val(meta), path(gtf)",
+        "output": "tuple val(meta), path(\"*.splice_sites.txt\"), emit: txt\n    path \"versions.yml\"                        , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "kallisto/index/main.nf",
+        "process_name": "KALLISTO_INDEX",
+        "input": "tuple val(meta), path(fasta)",
+        "output": "tuple val(meta), path(\"kallisto\")  , emit: index\n    path \"versions.yml\"                , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "kallisto/quant/main.nf",
+        "process_name": "KALLISTO_QUANT",
+        "input": "tuple val(meta), path(reads)\n    tuple val(meta2), path(index)\n    path gtf\n    path chromosomes\n    val fragment_length\n    val fragment_length_sd",
+        "output": "tuple val(meta), path(\"${prefix}\")        , emit: results\n    tuple val(meta), path(\"*.run_info.json\")  , emit: json_info\n    tuple val(meta), path(\"*.log\")            , emit: log\n    path \"versions.yml\"                       , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "kraken2/kraken2/main.nf",
+        "process_name": "KRAKEN2_KRAKEN2",
+        "input": "tuple val(meta), path(reads)\n    path  db\n    val save_output_fastqs\n    val save_reads_assignment",
+        "output": "tuple val(meta), path('*.classified{.,_}*')     , optional:true, emit: classified_reads_fastq\n    tuple val(meta), path('*.unclassified{.,_}*')   , optional:true, emit: unclassified_reads_fastq\n    tuple val(meta), path('*classifiedreads.txt')   , optional:true, emit: classified_reads_assignment\n    tuple val(meta), path('*report.txt')                           , emit: report\n    path \"versions.yml\"                                            , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "multiqc/main.nf",
+        "process_name": "MULTIQC",
+        "input": "path  multiqc_files, stageAs: \"?/*\"\n    path(multiqc_config)\n    path(extra_multiqc_config)\n    path(multiqc_logo)\n    path(replace_names)\n    path(sample_names)",
+        "output": "path \"*multiqc_report.html\", emit: report\n    path \"*_data\"              , emit: data\n    path \"*_plots\"             , optional:true, emit: plots\n    path \"versions.yml\"        , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "picard/markduplicates/main.nf",
+        "process_name": "PICARD_MARKDUPLICATES",
+        "input": "tuple val(meta), path(reads)\n    tuple val(meta2), path(fasta)\n    tuple val(meta3), path(fai)",
+        "output": "tuple val(meta), path(\"*.bam\") , emit: bam,  optional: true\n    tuple val(meta), path(\"*.bai\") , emit: bai,  optional: true\n    tuple val(meta), path(\"*.cram\"), emit: cram, optional: true\n    tuple val(meta), path(\"*.metrics.txt\"), emit: metrics\n    path  \"versions.yml\"                  , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "preseq/lcextrap/main.nf",
+        "process_name": "PRESEQ_LCEXTRAP",
+        "input": "tuple val(meta), path(bam)",
+        "output": "tuple val(meta), path(\"*.lc_extrap.txt\"), emit: lc_extrap\n    tuple val(meta), path(\"*.log\")          , emit: log\n    path  \"versions.yml\"                    , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "qualimap/rnaseq/main.nf",
+        "process_name": "QUALIMAP_RNASEQ",
+        "input": "tuple val(meta), path(bam)\n    tuple val(meta2), path(gtf)",
+        "output": "tuple val(meta), path(\"${prefix}\"), emit: results\n    path  \"versions.yml\"              , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args   ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "rsem/calculateexpression/main.nf",
+        "process_name": "RSEM_CALCULATEEXPRESSION",
+        "input": "tuple val(meta), path(reads)\n    path  index",
+        "output": "tuple val(meta), path(\"*.genes.results\")   , emit: counts_gene\n    tuple val(meta), path(\"*.isoforms.results\"), emit: counts_transcript\n    tuple val(meta), path(\"*.stat\")            , emit: stat\n    tuple val(meta), path(\"*.log\")             , emit: logs\n    path  \"versions.yml\"                       , emit: versions\n\n    tuple val(meta), path(\"*.STAR.genome.bam\")       , optional:true, emit: bam_star\n    tuple val(meta), path(\"${prefix}.genome.bam\")    , optional:true, emit: bam_genome\n    tuple val(meta), path(\"${prefix}.transcript.bam\"), optional:true, emit: bam_transcript\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args   ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "rsem/preparereference/main.nf",
+        "process_name": "RSEM_PREPAREREFERENCE",
+        "input": "path fasta, stageAs: \"rsem/*\"\n    path gtf",
+        "output": "path \"rsem\"           , emit: index\n    path \"*transcripts.fa\", emit: transcript_fasta\n    path \"versions.yml\"   , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "rseqc/innerdistance/main.nf",
+        "process_name": "RSEQC_INNERDISTANCE",
+        "input": "tuple val(meta), path(bam)\n    path  bed",
+        "output": "tuple val(meta), path(\"*distance.txt\"), optional:true, emit: distance\n    tuple val(meta), path(\"*freq.txt\")    , optional:true, emit: freq\n    tuple val(meta), path(\"*mean.txt\")    , optional:true, emit: mean\n    tuple val(meta), path(\"*.pdf\")        , optional:true, emit: pdf\n    tuple val(meta), path(\"*.r\")          , optional:true, emit: rscript\n    path  \"versions.yml\"                  , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "rseqc/junctionannotation/main.nf",
+        "process_name": "RSEQC_JUNCTIONANNOTATION",
+        "input": "tuple val(meta), path(bam)\n    path  bed",
+        "output": "tuple val(meta), path(\"*.xls\")         , emit: xls\n    tuple val(meta), path(\"*.r\")           , emit: rscript\n    tuple val(meta), path(\"*.log\")         , emit: log\n    tuple val(meta), path(\"*.junction.bed\"), optional:true, emit: bed\n    tuple val(meta), path(\"*.Interact.bed\"), optional:true, emit: interact_bed\n    tuple val(meta), path(\"*junction.pdf\") , optional:true, emit: pdf\n    tuple val(meta), path(\"*events.pdf\")   , optional:true, emit: events_pdf\n    path  \"versions.yml\"                   , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "rseqc/junctionsaturation/main.nf",
+        "process_name": "RSEQC_JUNCTIONSATURATION",
+        "input": "tuple val(meta), path(bam)\n    path  bed",
+        "output": "tuple val(meta), path(\"*.pdf\"), emit: pdf\n    tuple val(meta), path(\"*.r\")  , emit: rscript\n    path  \"versions.yml\"          , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "rseqc/readdistribution/main.nf",
+        "process_name": "RSEQC_READDISTRIBUTION",
+        "input": "tuple val(meta), path(bam)\n    path  bed",
+        "output": "tuple val(meta), path(\"*.read_distribution.txt\"), emit: txt\n    path  \"versions.yml\"                            , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "rseqc/readduplication/main.nf",
+        "process_name": "RSEQC_READDUPLICATION",
+        "input": "tuple val(meta), path(bam)",
+        "output": "tuple val(meta), path(\"*seq.DupRate.xls\"), emit: seq_xls\n    tuple val(meta), path(\"*pos.DupRate.xls\"), emit: pos_xls\n    tuple val(meta), path(\"*.pdf\")           , emit: pdf\n    tuple val(meta), path(\"*.r\")             , emit: rscript\n    path  \"versions.yml\"                     , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "rseqc/tin/main.nf",
+        "process_name": "RSEQC_TIN",
+        "input": "tuple val(meta), path(bam), path(bai)\n    path  bed",
+        "output": "tuple val(meta), path(\"*.txt\"), emit: txt\n    tuple val(meta), path(\"*.xls\"), emit: xls\n    path \"versions.yml\"           , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "salmon/index/main.nf",
+        "process_name": "SALMON_INDEX",
+        "input": "path genome_fasta\n    path transcript_fasta",
+        "output": "path \"salmon\"      , emit: index\n    path \"versions.yml\", emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "salmon/quant/main.nf",
+        "process_name": "SALMON_QUANT",
+        "input": "tuple val(meta), path(reads)\n    path  index\n    path  gtf\n    path  transcript_fasta\n    val   alignment_mode\n    val   lib_type",
+        "output": "tuple val(meta), path(\"${prefix}\")              , emit: results\n    tuple val(meta), path(\"*info.json\")             , emit: json_info, optional: true\n    tuple val(meta), path(\"*lib_format_counts.json\"), emit: lib_format_counts, optional: true\n    path  \"versions.yml\"                            , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args   ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "samtools/flagstat/main.nf",
+        "process_name": "SAMTOOLS_FLAGSTAT",
+        "input": "tuple val(meta), path(bam), path(bai)",
+        "output": "tuple val(meta), path(\"*.flagstat\"), emit: flagstat\n    path  \"versions.yml\"               , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "samtools/idxstats/main.nf",
+        "process_name": "SAMTOOLS_IDXSTATS",
+        "input": "tuple val(meta), path(bam), path(bai)",
+        "output": "tuple val(meta), path(\"*.idxstats\"), emit: idxstats\n    path  \"versions.yml\"               , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "samtools/index/main.nf",
+        "process_name": "SAMTOOLS_INDEX",
+        "input": "tuple val(meta), path(input)",
+        "output": "tuple val(meta), path(\"*.bai\") , optional:true, emit: bai\n    tuple val(meta), path(\"*.csi\") , optional:true, emit: csi\n    tuple val(meta), path(\"*.crai\"), optional:true, emit: crai\n    path  \"versions.yml\"           , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_low",
+        "publishDir": ""
+    },
+    {
+        "module_path": "samtools/sort/main.nf",
+        "process_name": "SAMTOOLS_SORT",
+        "input": "tuple val(meta) , path(bam)\n    tuple val(meta2), path(fasta)",
+        "output": "tuple val(meta), path(\"*.bam\"),  emit: bam,  optional: true\n    tuple val(meta), path(\"*.cram\"), emit: cram, optional: true\n    tuple val(meta), path(\"*.crai\"), emit: crai, optional: true\n    tuple val(meta), path(\"*.csi\"),  emit: csi,  optional: true\n    path  \"versions.yml\",            emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "samtools/stats/main.nf",
+        "process_name": "SAMTOOLS_STATS",
+        "input": "tuple val(meta), path(input), path(input_index)\n    tuple val(meta2), path(fasta)",
+        "output": "tuple val(meta), path(\"*.stats\"), emit: stats\n    path  \"versions.yml\"            , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "sortmerna/main.nf",
+        "process_name": "SORTMERNA",
+        "input": "tuple val(meta), path(reads)\n    tuple val(meta2), path(fastas)\n    tuple val(meta3), path(index)",
+        "output": "tuple val(meta), path(\"*non_rRNA.fastq.gz\"), emit: reads, optional: true\n    tuple val(meta), path(\"*.log\")             , emit: log, optional: true\n    tuple val(meta2), path(\"idx\")              , emit: index, optional: true\n    path  \"versions.yml\"                       , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args          = task.ext.args  ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "star/genomegenerate/main.nf",
+        "process_name": "STAR_GENOMEGENERATE",
+        "input": "tuple val(meta), path(fasta)\n    tuple val(meta2), path(gtf)",
+        "output": "tuple val(meta), path(\"star\")  , emit: index\n    path \"versions.yml\"            , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args        = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "stringtie/stringtie/main.nf",
+        "process_name": "STRINGTIE_STRINGTIE",
+        "input": "tuple val(meta), path(bam)\n    path  annotation_gtf",
+        "output": "tuple val(meta), path(\"*.transcripts.gtf\"), emit: transcript_gtf\n    tuple val(meta), path(\"*.abundance.txt\")  , emit: abundance\n    tuple val(meta), path(\"*.coverage.gtf\")   , optional: true, emit: coverage_gtf\n    tuple val(meta), path(\"*.ballgown\")       , optional: true, emit: ballgown\n    path  \"versions.yml\"                      , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args      = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "subread/featurecounts/main.nf",
+        "process_name": "SUBREAD_FEATURECOUNTS",
+        "input": "tuple val(meta), path(bams), path(annotation)",
+        "output": "tuple val(meta), path(\"*featureCounts.txt\")        , emit: counts\n    tuple val(meta), path(\"*featureCounts.txt.summary\"), emit: summary\n    path \"versions.yml\"                                , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "summarizedexperiment/summarizedexperiment/main.nf",
+        "process_name": "SUMMARIZEDEXPERIMENT_SUMMARIZEDEXPERIMENT",
+        "input": "tuple val(meta), path(matrix_files)\n    tuple val(meta2), path(rowdata)\n    tuple val(meta3), path(coldata)",
+        "output": "tuple val(meta), path(\"*.rds\")              , emit: rds\n    tuple val(meta), path(\"*.R_sessionInfo.log\"), emit: log\n    path \"versions.yml\"                         , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "template 'summarizedexperiment.r'",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "trimgalore/main.nf",
+        "process_name": "TRIMGALORE",
+        "input": "tuple val(meta), path(reads)",
+        "output": "tuple val(meta), path(\"*{3prime,5prime,trimmed,val}*.fq.gz\"), emit: reads\n    tuple val(meta), path(\"*report.txt\")                        , emit: log     , optional: true\n    tuple val(meta), path(\"*unpaired*.fq.gz\")                   , emit: unpaired, optional: true\n    tuple val(meta), path(\"*.html\")                             , emit: html    , optional: true\n    tuple val(meta), path(\"*.zip\")                              , emit: zip     , optional: true\n    path \"versions.yml\"                                         , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "tximeta/tximport/main.nf",
+        "process_name": "TXIMETA_TXIMPORT",
+        "input": "tuple val(meta), path(\"quants/*\")\n    tuple val(meta2), path(tx2gene)\n    val quant_type",
+        "output": "tuple val(meta), path(\"*gene_tpm.tsv\")                 , emit: tpm_gene\n    tuple val(meta), path(\"*gene_counts.tsv\")              , emit: counts_gene\n    tuple val(meta), path(\"*gene_counts_length_scaled.tsv\"), emit: counts_gene_length_scaled\n    tuple val(meta), path(\"*gene_counts_scaled.tsv\")       , emit: counts_gene_scaled\n    tuple val(meta), path(\"*gene_lengths.tsv\")             , emit: lengths_gene\n    tuple val(meta), path(\"*transcript_tpm.tsv\")           , emit: tpm_transcript\n    tuple val(meta), path(\"*transcript_counts.tsv\")        , emit: counts_transcript\n    tuple val(meta), path(\"*transcript_lengths.tsv\")       , emit: lengths_transcript\n    path \"versions.yml\"                                    , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "template 'tximport.r'",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "ucsc/bedclip/main.nf",
+        "process_name": "UCSC_BEDCLIP",
+        "input": "tuple val(meta), path(bedgraph)\n    path  sizes",
+        "output": "tuple val(meta), path(\"*.bedGraph\"), emit: bedgraph\n    path \"versions.yml\"                , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "ucsc/bedgraphtobigwig/main.nf",
+        "process_name": "UCSC_BEDGRAPHTOBIGWIG",
+        "input": "tuple val(meta), path(bedgraph)\n    path  sizes",
+        "output": "tuple val(meta), path(\"*.bigWig\"), emit: bigwig\n    path \"versions.yml\"              , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "umicollapse/main.nf",
+        "process_name": "UMICOLLAPSE",
+        "input": "tuple val(meta), path(input), path(bai)\n    val(mode)",
+        "output": "tuple val(meta), path(\"*.bam\"),                   emit: bam,        optional: true\n    tuple val(meta), path(\"*dedup*fastq.gz\"),         emit: fastq,      optional: true\n    tuple val(meta), path(\"*_UMICollapse.log\"),       emit: log\n    path  \"versions.yml\" ,                            emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args   = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_high",
+        "publishDir": ""
+    },
+    {
+        "module_path": "umitools/dedup/main.nf",
+        "process_name": "UMITOOLS_DEDUP",
+        "input": "tuple val(meta), path(bam), path(bai)\n    val get_output_stats",
+        "output": "tuple val(meta), path(\"${prefix}.bam\")     , emit: bam\n    tuple val(meta), path(\"*.log\")             , emit: log\n    tuple val(meta), path(\"*edit_distance.tsv\"), optional:true, emit: tsv_edit_distance\n    tuple val(meta), path(\"*per_umi.tsv\")      , optional:true, emit: tsv_per_umi\n    tuple val(meta), path(\"*per_position.tsv\") , optional:true, emit: tsv_umi_per_position\n    path  \"versions.yml\"                       , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "umitools/extract/main.nf",
+        "process_name": "UMITOOLS_EXTRACT",
+        "input": "tuple val(meta), path(reads)",
+        "output": "tuple val(meta), path(\"*.fastq.gz\"), emit: reads\n    tuple val(meta), path(\"*.log\")     , emit: log\n    path  \"versions.yml\"               , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    },
+    {
+        "module_path": "umitools/prepareforrsem/main.nf",
+        "process_name": "UMITOOLS_PREPAREFORRSEM",
+        "input": "tuple val(meta), path(bam), path(bai)",
+        "output": "tuple val(meta), path('*.bam'), emit: bam\n    tuple val(meta), path('*.log'), emit: log\n    path  \"versions.yml\"          , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_medium",
+        "publishDir": ""
+    },
+    {
+        "module_path": "untar/main.nf",
+        "process_name": "UNTAR",
+        "input": "tuple val(meta), path(archive)",
+        "output": "tuple val(meta), path(\"$prefix\"), emit: untar\n    path \"versions.yml\"             , emit: versions\n\n    when:\n    task.ext.when == null || task.ext.when",
+        "script": "def args  = task.ext.args ?: ''",
+        "container": "",
+        "label": "process_single",
+        "publishDir": ""
+    }
+]
