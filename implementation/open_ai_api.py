@@ -2,11 +2,21 @@ import openai
 import time
 import json
 import chardet
+import os
 
 output_file = "d_issues_with_conversation_summary.json"
 
-# Set your API key
-openai.api_key = "enter your openai api key here"
+# Load OpenAI API key from a separate file (not tracked by git)
+def load_openai_api_key():
+    key_path = os.path.join(os.path.dirname(__file__), 'openai_key.py')
+    if not os.path.exists(key_path):
+        raise FileNotFoundError(f"API key file not found: {key_path}\nPlease create a file named 'openai_key.py' in the implementation folder with a line: OPENAI_API_KEY = 'your-key-here'")
+    namespace = {}
+    with open(key_path, 'r', encoding='utf-8') as f:
+        exec(f.read(), namespace)
+    return namespace['OPENAI_API_KEY']
+
+openai.api_key = load_openai_api_key()
 
 # system commands
 system_commands = """
