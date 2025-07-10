@@ -1,6 +1,5 @@
 import requests
 import re
-import os
 
 # Raw base URL for modules
 base_url = "https://raw.githubusercontent.com/nf-core/rnaseq/3.18.0/modules/nf-core/"
@@ -68,12 +67,6 @@ files = [
 # Patterns
 patterns = {
     "process_name": re.compile(r"process\s+(\w+)", re.MULTILINE),
-    "input": re.compile(r"input:\s*([\s\S]*?)(?=\n\s*(output:|script:|container:|label:))", re.MULTILINE),
-    "output": re.compile(r"output:\s*([\s\S]*?)(?=\n\s*(script:|container:|label:))", re.MULTILINE),
-    "script": re.compile(r"script:\s*(?P<quote>['\"]{3}|['\"])?([\s\S]*?)(?P=quote)?\s*$", re.MULTILINE),
-    "container": re.compile(r"container\s*=\s*['\"]([^'\"]+)['\"]"),
-    "label": re.compile(r"label\s+['\"]([^'\"]+)['\"]"),
-    "publish_dir": re.compile(r"publishDir\s*:\s*path\((.*?)\)", re.MULTILINE)
 }
 
 metadata = []
@@ -90,12 +83,7 @@ for file in files:
     item = {
         "module_path": file,
         "process_name": patterns["process_name"].search(content).group(1) if patterns["process_name"].search(content) else "",
-        "input": patterns["input"].search(content).group(1).strip() if patterns["input"].search(content) else "",
-        "output": patterns["output"].search(content).group(1).strip() if patterns["output"].search(content) else "",
-        "script": patterns["script"].search(content).group(2).strip() if patterns["script"].search(content) else "",
-        "container": patterns["container"].search(content).group(1) if patterns["container"].search(content) else "",
-        "label": patterns["label"].search(content).group(1) if patterns["label"].search(content) else "",
-        "publishDir": patterns["publish_dir"].search(content).group(1).strip() if patterns["publish_dir"].search(content) else ""
+        "content": content,
     }
     metadata.append(item)
 
