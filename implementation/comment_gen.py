@@ -19,6 +19,7 @@ def convert_and_reverse_content(input_data):
             'content': generate_response(item['content'])
         }
         output_data.append(new_item)
+        print(f"Processed item with module_path: {item['module_path']}")
     print(f"Processed {len(output_data)} items.")
     return output_data
 
